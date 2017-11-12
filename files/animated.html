@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Animated Posts</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <link rel="shortcut icon" href="https://carto.com/favicon.ico" />
+    <style>
+      html, body, #map {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+	  
+	  a { 
+			text-decoration: none;
+		   }
+			   
+      #desc {
+          position: absolute;
+          top: 10px;
+          left: 45px;
+          border: 1px solid #999;
+          border-radius: 5px;
+          width: 275px;
+          background: rgba(255,255,255,0.9);
+          padding: 0 10px;
+      }
+      #sql-buttons {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+      }
+	  #ref {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+	  }
+	  
+	  .layer_selector {
+			background: rgba(90,90,90,0.9);
+			border-radius: 5px;
+			padding: 0;
+			border: 1px solid #999;
+			width: 200px;
+		}
+		
+				
+		.layer_selector ul {
+			padding: 0; margin: 0;
+			list-style-type: none;
+		}
+		.layer_selector li {
+			padding: 15px 30px;
+			font-family: Helvetica, Arial;
+			font-size: 16px;
+			color: #111;
+			cursor: pointer;
+		}
+		
+		.layer_selector li:hover {
+			background-color: #CCCCCC;
+			cursor: pointer;
+		}
+		
+		.layer_selector li.ref_selected	{
+			background-color: #A6CEE3;
+		}
+
+    </style>
+	
+	<style type="cartocss/text" id="cartocss">
+		
+		Map {
+		-torque-frame-count:303;
+		-torque-animation-duration:30;
+		-torque-time-attribute:"date";
+		-torque-aggregation-function:"avg(likes)";
+		-torque-resolution:2;
+		-torque-data-aggregation:linear;
+		}
+
+		#full_t{
+		  comp-op: lighter;
+		  marker-fill-opacity: 1;
+		  marker-line-color: #FFF;
+		  marker-line-width: 0;
+		  marker-line-opacity: 1;
+		  marker-type: point;
+		  marker-width: 6;
+		  marker-fill: #FFCC00;
+		  
+		  [value < 100] {  
+			marker-fill: #FF0000;
+		  }
+		  [value < 50 ] { 
+			marker-fill: #FFCC00;
+		  }
+		  [value < 20 ] { 
+			marker-fill: #00FF00;
+		  
+		}
+		#full_t[frame-offset=1] {
+		 marker-width:3;
+		 marker-fill-opacity:0.8;
+		}
+		#full_t[frame-offset=2] {
+		 marker-width:9;
+		 marker-fill-opacity:0.5;
+		}
+		#full_t[frame-offset=3] {
+		 marker-width:1;
+		 marker-fill-opacity:0.3;
+		}
+	}
+		</style>
+
+    <link rel="stylesheet" href="https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/themes/css/cartodb.css" />
+  </head>
+  <body>
+    <div id="map"></div>
+	
+	<div id="ref" class="layer_selector">
+		   <ul>
+			<a href="index.html" ><center><li>Back</li></center></a>
+			</ul>
+		</div>
+
+    <script src="https://cartodb-libs.global.ssl.fastly.net/cartodb.js/v3/3.15/cartodb.js"></script>
+    
+    <script>
+      function main() {
+		  
+		  var map = new L.Map('map', {
+			center: [43.4969, 39.4847], 
+			zoom: 7,
+			scrollWheelZoom: false
+		  });
+
+		  var layerSource = {
+			type: 'torque',
+			options: {
+			  user_name: 'astrolabe', 
+			  table_name: 'full_t',
+			  cartocss: $("#cartocss").html()
+			}
+		  }
+
+		  L.tileLayer('http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+          attribution: 'CartoDB'
+          }).addTo(map)
+		  
+		  cartodb.createLayer(map, layerSource)
+			.addTo(map)
+			.done(function(layer) {
+			
+			var torqueLayer = layer;
+			
+				torqueLayer.on('load', function() {
+					torqueLayer.play();
+				});
+			
+			  torqueLayer.on('change:time', function(changes) {
+				  if (changes.step === torqueLayer.provider.getSteps() - 1) {
+					torqueLayer.pause();
+				  }
+				});
+			})
+			.error(function(err) {
+			  console.log("Error: " + err);
+			});
+		}
+
+		window.onload = main;
+			</script>
+  </body>
+</html>
